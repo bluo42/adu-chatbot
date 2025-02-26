@@ -140,16 +140,14 @@ def generate_response(messages):
 # -------------------------------
 if st.session_state.vector_store is None:
     vector_store = None
-    # Attempt to load persisted vector store ID.
-    if os.path.exists(VECTOR_STORE_ID_FILE):
-        with open(VECTOR_STORE_ID_FILE, "r") as f:
-            stored_vector_store_id = f.read().strip()
+    # Try loading vector store ID from st.secrets.
+    if "VECTOR_STORE_ID" in st.secrets:
+        stored_vector_store_id = st.secrets["VECTOR_STORE_ID"]['vs_id']
         try:
-            # Try retrieving the vector store using the stored ID.
             vector_store = client.beta.vector_stores.retrieve(stored_vector_store_id)
-            st.sidebar.write("Loaded persisted vector store ID:", stored_vector_store_id)
+            st.sidebar.write("Loaded persisted vector store ID from secrets:", stored_vector_store_id)
         except Exception as e:
-            st.sidebar.write("Failed to load persisted vector store. Creating a new one. Error:", e)
+            st.sidebar.write("Failed to load persisted vector store from secrets. Creating a new one. Error:", e)
     # If not found or failed to load, create a new vector store.
     if vector_store is None:
         vector_store = client.beta.vector_stores.create(name=VS_NAME)
@@ -163,9 +161,7 @@ if st.session_state.vector_store is None:
             st.sidebar.write("Uploaded files:", [os.path.basename(p) for p in pdf_paths])
         else:
             st.sidebar.write("No PDF files found in the specified directories.")
-        # Write the new vector store ID to the file.
-        with open(VECTOR_STORE_ID_FILE, "w") as f:
-            f.write(vector_store.id)
+        st.sidebar.write("New vector store ID (please update your secrets.toml manually):", vector_store.id)
     st.session_state.vector_store = vector_store
     # Update the assistant's tool resources to use the vector store.
     assistant = client.beta.assistants.update(
