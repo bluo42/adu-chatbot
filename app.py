@@ -9,8 +9,8 @@ if "SSL_CERT_FILE" in os.environ:
     del os.environ["SSL_CERT_FILE"]
 
 # --- Configuration ---
-openai.api_key = st.secrets["openai"]["api_key"]
-client = OpenAI()
+api_key = st.secrets["openai"]["api_key"]
+client = OpenAI(api_key)
 
 # Directories for PDF files.
 LETTERS_DIR = os.path.join("data", "Letters")
